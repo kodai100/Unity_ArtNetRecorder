@@ -1,4 +1,4 @@
-# ArtNet / UDP Recorder
+# <img src="https://github.com/kodai100/Unity_ArtNetRecorder/blob/master/img/icon.png" width="25" height="25"> ArtNet / UDP Recorder
 
 ![thumbnail](https://github.com/kodai100/Unity_ArtNetRecorder/blob/master/img/thumbnail.png)
 
