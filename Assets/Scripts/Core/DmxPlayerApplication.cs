@@ -112,14 +112,14 @@ public class DmxPlayerApplication : MonoBehaviour
         
         // ここでヘッダ読んでくる
         
-        header = 0;
+        header = playerUI.GetSliderPosition() * endTime;
         endTime = artNetPlayer.GetDuration();
         
         playerUI.SetAsPauseVisual();
 
         playState = PlayState.Playing;
         
-        audioPlayer.Resume(2566.667f);
+        audioPlayer.Resume(2566.667f + (float)header);
     }
 
     public void Pause()
@@ -146,7 +146,7 @@ public class DmxPlayerApplication : MonoBehaviour
 
         visualizer.Exec(artNetPlayer.Read(header));
 
-        playerUI.SetHeader(header, endTime);
+        playerUI.SetHeader(header);
 
     }
     
