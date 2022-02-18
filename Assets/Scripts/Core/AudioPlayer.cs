@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -13,8 +15,16 @@ public class AudioPlayer : MonoBehaviour
         source.playOnAwake = false;
     }
     
-    public void Play()
+    public async void Play(double delayMillisec)
     {
+        await Task.Delay(TimeSpan.FromMilliseconds(delayMillisec));
+        
+        source.Play();
+    }
+
+    public void Resume(float positionMillisec)
+    {
+        source.time = positionMillisec * 0.001f;
         source.Play();
     }
 
