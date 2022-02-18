@@ -1,23 +1,68 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 
-[PreferBinarySerialization]
-public class DmxRecordData : ScriptableObject
+public class DmxRecordData
 {
-    [SerializeField] private double duration;
-    [SerializeField] private List<DmxRecordPacket> data;
+    private double duration;
+    private List<DmxRecordPacket> data;
 
     public double Duration => duration;
     public IEnumerable<DmxRecordPacket> Data => data;
-    
-    public static DmxRecordData CreateAsset(double duration, List<DmxRecordPacket> list)
+
+    public DmxRecordData(double duration, List<DmxRecordPacket> data)
     {
-        var asset = CreateInstance<DmxRecordData>();
-        asset.duration = duration;
-        asset.data = list;
-        
-        return asset;
+        this.duration = duration;
+        this.data = data;
+    }
+    
+    public static DmxRecordData ReadFromFilePath(string path)
+    {
+        try
+        {
+            var list = new List<DmxRecordPacket>();
+
+            double finalPaketTime = 0;
+            
+            using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var reader = new BinaryReader(stream);
+                
+                // loop to the end
+                var baseStream = reader.BaseStream;
+                while ( baseStream.Position != baseStream.Length )
+                {
+                    var sequence = (int)reader.ReadUInt32();
+                    var time = reader.ReadDouble();
+
+                    finalPaketTime = time;
+                    
+                    var numUniverses = (int)reader.ReadUInt32();
+                
+                    var data = new List<UniverseData>();
+                
+                    for (var i = 0; i < numUniverses; i++)
+                    {
+                        var universe = (int)reader.ReadUInt32();
+                        data.Add(new UniverseData{universe=universe, data=reader.ReadBytes( 512).ToArray()});
+                    }
+                
+                    list.Add(new DmxRecordPacket
+                    {
+                        sequence = sequence, time = time, numUniverses = numUniverses, data = data
+                    });
+                }
+            }
+
+            return new DmxRecordData(finalPaketTime, list);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed importing {path}. {e.Message}");
+            return null;
+        }
     }
 }
 

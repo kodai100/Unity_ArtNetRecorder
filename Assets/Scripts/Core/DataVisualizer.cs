@@ -66,7 +66,6 @@ public class DataVisualizer : MonoBehaviour, IDisposable
 
     public void Dispose()
     {
-        dmxComputeBuffer.Release();
-    
+        dmxComputeBuffer?.Release();
     }
 }
