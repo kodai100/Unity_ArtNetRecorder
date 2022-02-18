@@ -9,6 +9,8 @@ public class AudioPlayer : MonoBehaviour
 
     [SerializeField] private AudioSource source;
 
+    [SerializeField] private LoadingUI loadingUI;    // TODO: 複数定義やめる
+
     private void Start()
     {
         source.loop = false;
@@ -39,7 +41,9 @@ public class AudioPlayer : MonoBehaviour
 
         var r = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG);
 
+        loadingUI.Display();
         await r.SendWebRequest();
+        loadingUI.Hide();
         
         if (r.result == UnityWebRequest.Result.Success){
             source.clip = DownloadHandlerAudioClip.GetContent(r);

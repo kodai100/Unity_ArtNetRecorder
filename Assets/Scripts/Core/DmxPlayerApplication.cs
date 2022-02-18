@@ -21,6 +21,8 @@ public class DmxPlayerApplication : MonoBehaviour
     [SerializeField] private AudioPlayer audioPlayer;
 
     [SerializeField] private ArtNetPlayer artNetPlayer;
+
+    [SerializeField] private LoadingUI loadingUI;
      
     private bool initialized = false;
     
@@ -31,6 +33,8 @@ public class DmxPlayerApplication : MonoBehaviour
     
     private void Start()
     {
+
+        loadingUI.Hide();
 
         playerUI.OnPlayButtonPressedAsObservable.Subscribe(_ =>
         {
@@ -72,7 +76,12 @@ public class DmxPlayerApplication : MonoBehaviour
         initialized = false;
         
         // read file
+        loadingUI.Display();
+        
         var data = await artNetPlayer.Load(path);
+
+        loadingUI.Hide();
+        
         endTime = data.Duration;
         
         if (data != null)
