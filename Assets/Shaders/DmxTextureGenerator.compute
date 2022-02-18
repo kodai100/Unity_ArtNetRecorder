@@ -1,0 +1,10 @@
+﻿#pragma kernel CSMain
+
+RWStructuredBuffer<float> _Buffer;
+RWTexture2D<float4> _Result;
+
+[numthreads(32, 32,1)]
+void CSMain (uint3 DTid : SV_DispatchThreadID)
+{
+	_Result[DTid.xy] = float4(_Buffer[DTid.y * 512 + DTid.x], 0.0, 0.0, 0.0);
+}

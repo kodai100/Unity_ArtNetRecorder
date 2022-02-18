@@ -48,10 +48,16 @@ namespace ProjectBlue.ArtNetRecorder
                 recorder.name = "UDP Recorder";
                 recordingStatusText.text = "Changed to UDP Recorder";
             }
-            else
+            else if(index == 1)
             {
                 currentRecorder = recorder.AddComponent<DmxRecorder>();
                 recorder.name = "DMX Recorder";
+                recordingStatusText.text = "Changed to ArtNet Recorder";
+            }
+            else
+            {
+                currentRecorder = recorder.AddComponent<AcnRecorder>();
+                recorder.name = "ACN Recorder";
                 recordingStatusText.text = "Changed to ArtNet Recorder";
             }
             
