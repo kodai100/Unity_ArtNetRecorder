@@ -1320,7 +1320,7 @@ GameObject:
   - component: {fileID: 1200623766}
   - component: {fileID: 1200623769}
   m_Layer: 5
-  m_Name: Tab
+  m_Name: RecordingTab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1550,7 +1550,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 690363e9e3ae15843a52e0d3536e7a15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tab: {fileID: 1200623769}
+  recordingTab: {fileID: 1200623769}
   recordingStatusText: {fileID: 758843317}
   timeCodeText: {fileID: 363778559}
   recordButton: {fileID: 383306112}

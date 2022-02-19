@@ -5,13 +5,20 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
+[Serializable]
+public class ButtonAndCanvasGroupPair
+{
+    public Button button;
+    public CanvasGroup canvasGroup;
+}
+
 public class Tab : MonoBehaviour
 {
 
     [SerializeField] private Color disabledBackgroundColor;
     [SerializeField] private Color enabledBackgroundColor;
 
-    [SerializeField] private List<Button> buttons;
+    [SerializeField] private List<ButtonAndCanvasGroupPair> pairs;
     
     private Subject<int> onSelected = new Subject<int>();
 
@@ -21,42 +28,63 @@ public class Tab : MonoBehaviour
     {
 
 
-        for (var i = 0; i < buttons.Count; i++)
+        for (var i = 0; i < pairs.Count; i++)
         {
             var i1 = i;    // capture
-            buttons[i1].OnClickAsObservable().Subscribe(_ =>
+            pairs[i1].button.OnClickAsObservable().Subscribe(_ =>
             {
                 onSelected.OnNext(i1);
-                buttons.ForEach(b =>
+                pairs.ForEach(pair =>
                 {
-                    b.targetGraphic.color = disabledBackgroundColor;
+                    if (pair.button != null)
+                    {
+                        pair.button.targetGraphic.color = disabledBackgroundColor;
+                    }
+                    
+                    if (pair.canvasGroup != null)
+                    {
+                        pair.canvasGroup.alpha = 0;
+                        pair.canvasGroup.interactable = false;
+                        pair.canvasGroup.blocksRaycasts = false;
+                    }
+                    
                 });
+                
+                if (pairs[i1].button != null)
+                {
+                    pairs[i1].button.targetGraphic.color = enabledBackgroundColor;
+                }
 
-                buttons[i1].targetGraphic.color = enabledBackgroundColor;
+                if (pairs[i1].canvasGroup != null)
+                {
+                    pairs[i1].canvasGroup.alpha = 1;
+                    pairs[i1].canvasGroup.interactable = true;
+                    pairs[i1].canvasGroup.blocksRaycasts = true;
+                }
 
             }).AddTo(this);
         }
 
         await Task.Delay(TimeSpan.FromSeconds(0.1f));
         
-        buttons[0].onClick.Invoke();
+        pairs[0].button.onClick.Invoke();
         
     }
 
 
     public void Disable()
     {
-        buttons.ForEach(b =>
+        pairs.ForEach(pair =>
         {
-            b.interactable = false;
+            pair.button.interactable = false;
         });
     }
 
     public void Enable()
     {
-        buttons.ForEach(b =>
+        pairs.ForEach(pair =>
         {
-            b.interactable = true;
+            pair.button.interactable = true;
         });
     }
     
