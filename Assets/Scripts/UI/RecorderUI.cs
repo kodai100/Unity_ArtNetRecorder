@@ -92,8 +92,6 @@ namespace ProjectBlue.ArtNetRecorder
             {
                 indicatorUI.SetScale(tuple.Item2);
                 indicatorUI.Set(tuple.Item1, tuple.Item3);
-                
-                Debug.Log($"Sequence : {tuple.Item1}");
             };
             
             
