@@ -30,6 +30,7 @@ namespace ProjectBlue.ArtNetRecorder
     public abstract class RecorderBase : MonoBehaviour
     {
         public Action<double> OnUpdateTime;
+        public Action<(int, int, int)> OnIndicatorUpdate;
         public Action<SaveResult> OnSaved;
         public bool IsRecording { get; protected set; }
         public abstract void RecordStart();
@@ -159,7 +160,6 @@ namespace ProjectBlue.ArtNetRecorder
                 {
                     try
                     {
-                        Debug.Log("Loop");
                         
                         // DMXの受信プロセス
                         var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
@@ -181,21 +181,26 @@ namespace ProjectBlue.ArtNetRecorder
                     }
                     catch (Exception e)
                     {
-                        if (e is AggregateException)
+                        switch (e)
                         {
-
-                            if (e.InnerException is TaskCanceledException)
+                            case AggregateException _:
                             {
-                                Debug.Log("Task canceled");
+                                if (e.InnerException is TaskCanceledException)
+                                {
+                                    Debug.Log("Task canceled");
+                                }
+
+                                break;
                             }
-                            
+                            case TaskCanceledException _:
+                                Debug.Log("Task canceled");
+                                break;
+                            default:
+                                Debug.LogException(e);
+                                break;
                         }
-                        else
-                        {
-                            Debug.LogException(e);
-                        }
-                        
-                        
+
+
                         loopFlg = false;
                     }
                 }

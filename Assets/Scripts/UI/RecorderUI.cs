@@ -22,6 +22,8 @@ namespace ProjectBlue.ArtNetRecorder
 
         [SerializeField] private RecorderBase currentRecorder;
 
+        [SerializeField] private IndicatorUI indicatorUI;
+
         private void Start()
         {
 
@@ -55,6 +57,10 @@ namespace ProjectBlue.ArtNetRecorder
                 recordingStatusText.text = "Changed to ArtNet Recorder";
             }
             
+            
+            
+            
+            
             recordButton.Button.OnClickAsObservable().Subscribe(_ =>
             {
 
@@ -78,6 +84,18 @@ namespace ProjectBlue.ArtNetRecorder
                 }
                 
             }).AddTo(currentRecorder);
+            
+            
+            indicatorUI.ResetIndicator();
+
+            currentRecorder.OnIndicatorUpdate = tuple =>
+            {
+                indicatorUI.SetScale(tuple.Item2);
+                indicatorUI.Set(tuple.Item1, tuple.Item3);
+                
+                Debug.Log($"Sequence : {tuple.Item1}");
+            };
+            
             
             currentRecorder.OnUpdateTime = (ms) =>
             {

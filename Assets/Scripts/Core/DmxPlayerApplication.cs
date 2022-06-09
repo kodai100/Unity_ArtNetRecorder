@@ -23,7 +23,7 @@ public class DmxPlayerApplication : MonoBehaviour
     [SerializeField] private ArtNetPlayer artNetPlayer;
 
     [SerializeField] private LoadingUI loadingUI;
-     
+
     private bool initialized = false;
     
     private double header = 0;
