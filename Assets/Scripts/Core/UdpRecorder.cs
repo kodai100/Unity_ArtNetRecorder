@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -44,10 +46,13 @@ namespace ProjectBlue.ArtNetRecorder
         private Stopwatch recordingStopWatch = new Stopwatch();
         private uint recordingSequenceNumber = 0;
 
+        private SynchronizationContext context;
+        
         private void OnEnable()
         {
             loopFlg = true;
-            ReceiveUdpTaskRun();
+            context = SynchronizationContext.Current;
+            ReceiveUdpTaskRun(this.GetCancellationTokenOnDestroy()).Forget();
         }
 
         private void Update()
@@ -61,7 +66,8 @@ namespace ProjectBlue.ArtNetRecorder
 
         private void OnDisable()
         {
-            if (!loopFlg) return;
+
+            Debug.Log("OnDisable");
             
             loopFlg = false;
             IsRecording = false;
@@ -139,40 +145,65 @@ namespace ProjectBlue.ArtNetRecorder
             recordingStopWatch.Reset();
         }
         
-        private void ReceiveUdpTaskRun()
+        private async UniTaskVoid ReceiveUdpTaskRun(CancellationToken cancellationToken = default)
         {
             var ip = new IPEndPoint(IPAddress.Any, Const.ArtNetServerPort);
-            Task.Run(() =>
+            
+            Debug.Log("Run");
+            
+            await Task.Run(() =>
             {
-                using (var udpClient = new UdpClient(ip))
+                using var udpClient = new UdpClient(ip);
+                
+                while (loopFlg)
                 {
-
-                    while (loopFlg)
+                    try
                     {
-                        try
-                        {
-                            // DMXの受信プロセス
-                            var result = udpClient.ReceiveAsync();
-                            if (result.Result.Buffer.Length > 0)
-                            {
-                                var buffer = result.Result.Buffer;
+                        Debug.Log("Loop");
+                        
+                        // DMXの受信プロセス
+                        var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
 
-                                if (IsRecording)
+                        if (result.Result.Buffer.Length > 0)
+                        {
+                            var buffer = result.Result.Buffer;
+
+                            if (IsRecording)
+                            {
+                                udpBuff.Enqueue(new UdpRecordingPacket()
                                 {
-                                    udpBuff.Enqueue(new UdpRecordingPacket(){Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds, Data = buffer});
-                                    recordingSequenceNumber++;
-                                }
+                                    Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds,
+                                    Data = buffer
+                                });
+                                recordingSequenceNumber++;
                             }
                         }
-                        catch (Exception e)
+                    }
+                    catch (Exception e)
+                    {
+                        if (e is AggregateException)
+                        {
+
+                            if (e.InnerException is TaskCanceledException)
+                            {
+                                Debug.Log("Task canceled");
+                            }
+                            
+                        }
+                        else
                         {
                             Debug.LogException(e);
                         }
+                        
+                        
+                        loopFlg = false;
                     }
-                    
-                    Debug.Log("UDP Server finished");
                 }
-            });
+                
+            }, cancellationToken);
+
+            
+            Debug.Log("UDP Server finished");
             
         }
     }
