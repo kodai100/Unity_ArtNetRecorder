@@ -122,6 +122,7 @@ namespace ProjectBlue.ArtNetRecorder
                                     }
                                 }
                                 
+                                // TODO: 多分BinaryWriter継承したクラス作ってRecデータ構造定義してあげたほうがよさそう
                                 var bytes = ByteConvertUtility.Join(sequence, milliseconds, ByteConvertUtility.GetBytes(numUniverses), dataSegment.SelectMany(a => a).ToArray());
                                 file.Write(bytes, 0, bytes.Length);
                                 bytesLen += bytes.Length;

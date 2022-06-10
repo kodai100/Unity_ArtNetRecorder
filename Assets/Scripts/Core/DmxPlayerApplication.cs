@@ -144,7 +144,7 @@ public class DmxPlayerApplication : MonoBehaviour
         
         header += Time.deltaTime * 1000;    // millisec
 
-        visualizer.Exec(artNetPlayer.Read(header));
+        visualizer.Exec(artNetPlayer.ReadAndSend(header));
 
         playerUI.SetHeader(header);
 

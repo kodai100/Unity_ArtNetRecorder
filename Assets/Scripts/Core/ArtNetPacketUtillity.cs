@@ -1,4 +1,5 @@
-﻿using Unity.Collections.LowLevel.Unsafe;
+﻿using System.Linq;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace ProjectBlue
 {
@@ -13,12 +14,13 @@ namespace ProjectBlue
             var offset = 14;
             return ByteConvertUtility.ToShort(buffer, ref offset);
         }
-        public unsafe static void GetDmx(byte[] src, ref byte[] dst)
+        public static unsafe void GetDmx(byte[] src, ref byte[] dst)
         {
             fixed (byte* bp = src, dp = dst)
             {
                 UnsafeUtility.MemCpy(dp, bp + 18, dst.Length);
             }
         }
+        
     }
 }
