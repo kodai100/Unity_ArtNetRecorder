@@ -154,13 +154,14 @@ namespace ProjectBlue.ArtNetRecorder
             
             await Task.Run(() =>
             {
-                using var udpClient = new UdpClient(ip);
-                
-                while (loopFlg)
+
+                try
                 {
-                    try
+                    using var udpClient = new UdpClient(ip);
+
+                    while (loopFlg)
                     {
-                        
+
                         // DMXの受信プロセス
                         var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
 
@@ -179,32 +180,35 @@ namespace ProjectBlue.ArtNetRecorder
                             }
                         }
                     }
-                    catch (Exception e)
-                    {
-                        switch (e)
-                        {
-                            case AggregateException _:
-                            {
-                                if (e.InnerException is TaskCanceledException)
-                                {
-                                    Debug.Log("Task canceled");
-                                }
 
-                                break;
-                            }
-                            case TaskCanceledException _:
-                                Debug.Log("Task canceled");
-                                break;
-                            default:
-                                Debug.LogException(e);
-                                break;
-                        }
-
-
-                        loopFlg = false;
-                    }
                 }
-                
+                catch (Exception e)
+                {
+                    switch (e)
+                    {
+                        case AggregateException _:
+                        {
+                            if (e.InnerException is TaskCanceledException)
+                            {
+                                Debug.Log("Task canceled");
+                            }
+
+                            break;
+                        }
+                        case TaskCanceledException _:
+                            Debug.Log("Task canceled");
+                            break;
+                        case SocketException _:
+                            Logger.Error("ポート6454が他のアプリケーションによって専有されています");
+                            break;
+                        default:
+                            Debug.LogException(e);
+                            break;
+                    }
+
+                    loopFlg = false;
+                }
+
             }, cancellationToken);
 
             

@@ -178,101 +178,100 @@ namespace ProjectBlue.ArtNetRecorder
             
             Task.Run(() =>
             {
-                using (var udpClient = new UdpClient(ip))
+
+                try
                 {
+                    using var udpClient = new UdpClient(ip);
+                    
                     var fixedFramerateStopwatch = new Stopwatch();
                     var dt = 0.0d;
 
                     while (loopFlg)
                     {
-                        
-                        try
+                                
+                        // DMXのレコードのために一時バッファに格納するプロセス
+                        if (IsRecording)
                         {
-                            
-                            
-                            // DMXのレコードのために一時バッファに格納するプロセス
-                            if (IsRecording)
+                            fixedFramerateStopwatch.Stop();
+                            if (dt <= fixedFramerateStopwatch.Elapsed.TotalSeconds)
                             {
-                                fixedFramerateStopwatch.Stop();
-                                if (dt <= fixedFramerateStopwatch.Elapsed.TotalSeconds)
+                                    
+                                fixedFramerateStopwatch.Start();
+                                dt += FixedDeltaTime;
+                                    
+                                // Create packet
+                                    
+                                var buff = new byte[Const.MaxUniverse][];
+                                for (var i = 0; i < Const.MaxUniverse; i++)
                                 {
-                                    
-                                    fixedFramerateStopwatch.Start();
-                                    dt += FixedDeltaTime;
-                                    
-                                    // Create packet
-                                    
-                                    var buff = new byte[Const.MaxUniverse][];
-                                    for (var i = 0; i < Const.MaxUniverse; i++)
+                                    if (dmx[i] != null)
                                     {
-                                        if (dmx[i] != null)
+                                        buff[i] = new byte[512];
+                                        fixed (byte* src = dmx[i], dst = buff[i])
                                         {
-                                            buff[i] = new byte[512];
-                                            fixed (byte* src = dmx[i], dst = buff[i])
-                                            {
-                                                UnsafeUtility.MemCpy(dst, src, buff[i].Length);
-                                            }
+                                            UnsafeUtility.MemCpy(dst, src, buff[i].Length);
                                         }
                                     }
-                                    dmxBuff.Enqueue(new DmxRecordingPacket{Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds, Data = buff});
-                                    recordingSequenceNumber++;
                                 }
-                                else
-                                {
-                                    fixedFramerateStopwatch.Start();
-                                }
+                                dmxBuff.Enqueue(new DmxRecordingPacket{Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds, Data = buff});
+                                recordingSequenceNumber++;
                             }
-                            
-                            
-                            // DMXの受信プロセス
-                            var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
-                            
-                            if (result.Result.Buffer.Length > 0)
+                            else
                             {
-                                var buffer = result.Result.Buffer;
-                                if (ArtNetPacketUtillity.GetOpCode(buffer) == ArtNetOpCodes.Dmx)
-                                {
-                                    var universe = ArtNetPacketUtillity.GetUniverse(buffer);
-                                    dmx[universe] ??= new byte[512];    // 新しいUniverseが飛んできた場合はバッファに新規Universeの配列分を足す
-                                    ArtNetPacketUtillity.GetDmx(buffer, ref dmx[universe]);
-                                }
+                                fixedFramerateStopwatch.Start();
                             }
-                            
-                            
-                            
-                            
-                            
                         }
-                        catch (Exception e)
+                            
+                            
+                        // DMXの受信プロセス
+                        var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
+
+                        if (result.Result.Buffer.Length > 0)
                         {
-                            switch (e)
+                            var buffer = result.Result.Buffer;
+                            if (ArtNetPacketUtillity.GetOpCode(buffer) == ArtNetOpCodes.Dmx)
                             {
-                                case AggregateException _:
-                                {
-                                    if (e.InnerException is TaskCanceledException)
-                                    {
-                                        Debug.Log("Task canceled");
-                                    }
-
-                                    break;
-                                }
-                                case TaskCanceledException _:
-                                    Debug.Log("Task canceled");
-                                    break;
-                                default:
-                                    Debug.LogException(e);
-                                    break;
+                                var universe = ArtNetPacketUtillity.GetUniverse(buffer);
+                                dmx[universe] ??= new byte[512]; // 新しいUniverseが飛んできた場合はバッファに新規Universeの配列分を足す
+                                ArtNetPacketUtillity.GetDmx(buffer, ref dmx[universe]);
                             }
-
-                            loopFlg = false;
                         }
 
                     }
-                    
+                        
                     Debug.Log("DMX Server finished");
-                    
+                        
                     fixedFramerateStopwatch.Stop();
                 }
+                catch (Exception e)
+                {
+                    switch (e)
+                    {
+                        case AggregateException _:
+                        {
+                            if (e.InnerException is TaskCanceledException)
+                            {
+                                Debug.Log("Task canceled");
+                            }
+
+                            break;
+                        }
+                        case TaskCanceledException _:
+                            Debug.Log("Task canceled");
+                            break;
+                        case SocketException _:
+                            Logger.Error("ポート6454が他のアプリケーションによって専有されています");
+                            break;
+                        default:
+                            Debug.LogException(e);
+                            break;
+                    }
+
+                    loopFlg = false;
+                }
+                
+                
+               
             }, cancellationToken);
         }
     }

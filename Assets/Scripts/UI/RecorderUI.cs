@@ -1,7 +1,7 @@
 using System;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,8 +13,6 @@ namespace ProjectBlue.ArtNetRecorder
     {
 
         [SerializeField] private Tab tab;
-
-        [SerializeField] private Text recordingStatusText;
 
         [SerializeField] private Text timeCodeText;
 
@@ -48,26 +46,23 @@ namespace ProjectBlue.ArtNetRecorder
             {
                 currentRecorder = recorder.AddComponent<UdpRecorder>();
                 recorder.name = "UDP Recorder";
-                recordingStatusText.text = "Changed to UDP Recorder";
+                Logger.Log("Changed to UDP Recorder");
             }
-            else if(index == 1)
+            else if (index == 1)
             {
                 currentRecorder = recorder.AddComponent<ArtNetRecorder>();
                 recorder.name = "DMX Recorder";
-                recordingStatusText.text = "Changed to ArtNet Recorder";
+                Logger.Log("Changed to ArtNet Recorder");
             }
-            
-            
-            
-            
-            
+
+
             recordButton.Button.OnClickAsObservable().Subscribe(_ =>
             {
 
                 if (!currentRecorder.IsRecording)
                 {
                     recordButton.SetRecord();
-                    recordingStatusText.text = "Recording...";
+                    Logger.Log("Recording...");
                     timeCodeText.color = Color.red;
                     currentRecorder.RecordStart();
 
@@ -121,7 +116,7 @@ namespace ProjectBlue.ArtNetRecorder
                     size = result.Size + "Bytes";
                 }
                     
-                recordingStatusText.text = $"Saved - Packets: {result.PacketNum}, DataSize: {size} : {result.DataPath}";
+                Logger.Log($"Saved - Packets: {result.PacketNum}, DataSize: {size} : {result.DataPath}");
             };
         }
     }

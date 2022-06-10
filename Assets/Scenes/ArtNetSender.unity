@@ -19573,8 +19573,9 @@ GameObject:
   - component: {fileID: 758843316}
   - component: {fileID: 758843318}
   - component: {fileID: 758843317}
+  - component: {fileID: 758843319}
   m_Layer: 5
-  m_Name: Text
+  m_Name: StatusText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19642,6 +19643,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 758843315}
   m_CullTransparentMesh: 1
+--- !u!114 &758843319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 758843315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ce690935c10fd14fb6b7395cd4a45fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  text: {fileID: 758843317}
 --- !u!1 &760032839
 GameObject:
   m_ObjectHideFlags: 0
@@ -24116,7 +24130,7 @@ GameObject:
   - component: {fileID: 956336651}
   - component: {fileID: 956336653}
   m_Layer: 0
-  m_Name: Tab
+  m_Name: Layout
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26331,6 +26345,7 @@ Transform:
   m_Children:
   - {fileID: 87316685}
   - {fileID: 1789697829}
+  - {fileID: 1446004588}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -36983,6 +36998,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1445652318}
   m_CullTransparentMesh: 1
+--- !u!1 &1446004587
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1446004588}
+  - component: {fileID: 1446004589}
+  m_Layer: 0
+  m_Name: Logger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1446004588
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446004587}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1034247262}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1446004589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446004587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23ca7f8e888f6f64ab3128dfaf1d647b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  statusTextUI: {fileID: 758843319}
 --- !u!1 &1452301004
 GameObject:
   m_ObjectHideFlags: 0
@@ -44539,7 +44599,7 @@ GameObject:
   - component: {fileID: 1767224373}
   - component: {fileID: 1767224372}
   m_Layer: 0
-  m_Name: Header (1)
+  m_Name: Footer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45125,7 +45185,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tab: {fileID: 1200623769}
-  recordingStatusText: {fileID: 758843317}
   timeCodeText: {fileID: 363778559}
   recordButton: {fileID: 383306112}
   currentRecorder: {fileID: 0}
