@@ -8,7 +8,7 @@ public enum PlayState
     Playing, Pausing
 }
 
-public class ArtNetPlayerApplication : MonoBehaviour
+public class ArtNetPlayerApplication : ApplicationBase
 {
 
     [SerializeField] private DataVisualizer visualizer;
@@ -30,6 +30,18 @@ public class ArtNetPlayerApplication : MonoBehaviour
     private double endTime;
 
     private PlayState playState = PlayState.Pausing;
+    
+    
+    public override void OnClose()
+    {
+        Pause();
+    }
+
+    public override void OnOpen()
+    {
+        // throw new NotImplementedException();
+    }
+    
     
     private void Start()
     {

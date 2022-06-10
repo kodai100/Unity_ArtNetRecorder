@@ -2314,7 +2314,7 @@ GameObject:
   - component: {fileID: 87316684}
   - component: {fileID: 87316686}
   m_Layer: 0
-  m_Name: ArtNetPlayer
+  m_Name: ArtNetPlayerApp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26324,8 +26324,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1034247262}
+  - component: {fileID: 1034247263}
   m_Layer: 0
-  m_Name: System
+  m_Name: Application
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26349,6 +26350,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1034247263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1034247260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d23e09d71e7f564a95077ab379fed17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  applicationTab: {fileID: 425357734}
+  applications:
+  - {fileID: 1789697830}
+  - {fileID: 87316686}
 --- !u!1 &1034384086
 GameObject:
   m_ObjectHideFlags: 0
@@ -45151,7 +45168,7 @@ GameObject:
   - component: {fileID: 1789697829}
   - component: {fileID: 1789697830}
   m_Layer: 0
-  m_Name: Recorder
+  m_Name: RecorderApp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

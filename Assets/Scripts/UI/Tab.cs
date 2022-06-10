@@ -24,6 +24,7 @@ public class Tab : MonoBehaviour
 
     public IObservable<int> OnSelected => onSelected;
 
+    // TODO: Tabの中で切り替え処理までやってしまって良いものか迷い中
     private async void Start()
     {
 

@@ -4,29 +4,37 @@ using UniRx;
 using ProjectBlue.ArtNetRecorder;
 using UnityEngine;
 
-public class DmxRecorderApplication : MonoBehaviour
+public class DmxRecorderApplication : ApplicationBase
 {
 
     [SerializeField] private RecorderUI recorderUI;
     
     [SerializeField] private RecorderBase currentRecorder;
+
+    private int prevRecorderIndex = 0;
     
-    private void Start()
+    public override void OnClose()
     {
-        recorderUI.TabChangedAsObservable.Subscribe(RecorderChanged).AddTo(this);
-    }
-
-    private async void RecorderChanged(int index)
-    {
-
         if (currentRecorder != null)
         {
             DestroyImmediate(currentRecorder.gameObject);
         }
-        
-        // Destroy and release udp port first
-        await Task.Delay(TimeSpan.FromSeconds(0.1f));
-        
+    }
+
+    public override void OnOpen()
+    {
+        RecorderChanged(prevRecorderIndex);
+    }
+    
+    
+    private void Start()
+    {
+        // OnOpenが最初に呼ばれるので、最初の小タブのイベントはスキップして重複を防止
+        recorderUI.TabChangedAsObservable.Skip(1).Subscribe(RecorderChanged).AddTo(this);
+    }
+
+    private void InstantiateRecorder(int index)
+    {
         var recorder = new GameObject();
 
         if (index == 0)
@@ -42,6 +50,21 @@ public class DmxRecorderApplication : MonoBehaviour
             Logger.Log("Changed to ArtNet Recorder");
         }
 
+        prevRecorderIndex = index;
+    }
+
+    private async void RecorderChanged(int index)
+    {
+
+        if (currentRecorder != null)
+        {
+            DestroyImmediate(currentRecorder.gameObject);
+        }
+        
+        // Destroy and release udp port first
+        await Task.Delay(TimeSpan.FromSeconds(0.1f));
+
+        InstantiateRecorder(index);
 
         recorderUI.RecordButton.Button.OnClickAsObservable().Subscribe(_ =>
         {
@@ -106,4 +129,6 @@ public class DmxRecorderApplication : MonoBehaviour
             Logger.Log($"Saved - Packets: {result.PacketNum}, DataSize: {size} : {result.DataPath}");
         };
     }
+
+   
 }
