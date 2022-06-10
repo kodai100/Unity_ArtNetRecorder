@@ -183,6 +183,8 @@ namespace ProjectBlue.ArtNetRecorder
                 {
                     using var udpClient = new UdpClient(ip);
                     
+                    Debug.Log("ArtNet Client Established");
+                    
                     var fixedFramerateStopwatch = new Stopwatch();
                     var dt = 0.0d;
 
@@ -238,9 +240,7 @@ namespace ProjectBlue.ArtNetRecorder
                         }
 
                     }
-                        
-                    Debug.Log("DMX Server finished");
-                        
+
                     fixedFramerateStopwatch.Stop();
                 }
                 catch (Exception e)
@@ -251,13 +251,13 @@ namespace ProjectBlue.ArtNetRecorder
                         {
                             if (e.InnerException is TaskCanceledException)
                             {
-                                Debug.Log("Task canceled");
+                                Debug.Log("ArtNet Receive Task canceled");
                             }
 
                             break;
                         }
                         case TaskCanceledException _:
-                            Debug.Log("Task canceled");
+                            Debug.Log("ArtNet Receive Task canceled");
                             break;
                         case SocketException _:
                             Logger.Error("ポート6454が他のアプリケーションによって専有されています");
@@ -270,7 +270,7 @@ namespace ProjectBlue.ArtNetRecorder
                     loopFlg = false;
                 }
                 
-                
+                Debug.Log("ArtNet Server finished");
                
             }, cancellationToken);
         }

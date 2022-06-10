@@ -8,7 +8,7 @@ public enum PlayState
     Playing, Pausing
 }
 
-public class DmxPlayerApplication : MonoBehaviour
+public class ArtNetPlayerApplication : MonoBehaviour
 {
 
     [SerializeField] private DataVisualizer visualizer;

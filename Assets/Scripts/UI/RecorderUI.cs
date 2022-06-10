@@ -1,7 +1,4 @@
 using System;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,107 +15,20 @@ namespace ProjectBlue.ArtNetRecorder
 
         [SerializeField] private RecordButton recordButton;
 
-        [SerializeField] private RecorderBase currentRecorder;
 
         [SerializeField] private IndicatorUI indicatorUI;
 
-        private void Start()
-        {
 
-            tab.OnSelected.Subscribe(RecorderChanged).AddTo(this);
-            
-        }
+        public IObservable<int> TabChangedAsObservable => tab.OnSelected;
 
-        private async void RecorderChanged(int index)
-        {
+        public RecordButton RecordButton => recordButton;
 
-            if (currentRecorder != null)
-            {
-                DestroyImmediate(currentRecorder.gameObject);
-            }
-            
-            // Destroy and release udp port first
-            await Task.Delay(TimeSpan.FromSeconds(0.1f));
-            
-            var recorder = new GameObject();
+        public Tab Tab => tab;
 
-            if (index == 0)
-            {
-                currentRecorder = recorder.AddComponent<UdpRecorder>();
-                recorder.name = "UDP Recorder";
-                Logger.Log("Changed to UDP Recorder");
-            }
-            else if (index == 1)
-            {
-                currentRecorder = recorder.AddComponent<ArtNetRecorder>();
-                recorder.name = "DMX Recorder";
-                Logger.Log("Changed to ArtNet Recorder");
-            }
+        public IndicatorUI IndicatorUI => indicatorUI;
 
+        public Text TimeCodeText => timeCodeText;
 
-            recordButton.Button.OnClickAsObservable().Subscribe(_ =>
-            {
-
-                if (!currentRecorder.IsRecording)
-                {
-                    recordButton.SetRecord();
-                    Logger.Log("Recording...");
-                    timeCodeText.color = Color.red;
-                    currentRecorder.RecordStart();
-
-                    tab.Disable();
-                }
-                else
-                {
-                    recordButton.SetStop();
-                    currentRecorder.RecordEnd();
-
-                    timeCodeText.color = Color.white;
-
-                    tab.Enable();
-                }
-                
-            }).AddTo(currentRecorder);
-            
-            
-            indicatorUI.ResetIndicator();
-
-            currentRecorder.OnIndicatorUpdate = tuple =>
-            {
-                indicatorUI.SetScale(tuple.Item2);
-                indicatorUI.Set(tuple.Item1, tuple.Item3);
-            };
-            
-            
-            currentRecorder.OnUpdateTime = (ms) =>
-            {
-                var t = TimeSpan.FromMilliseconds(ms);
-                timeCodeText.text = $"{t.Hours:D2}:{t.Minutes:D2}:{t.Seconds:D2};{t.Milliseconds:D3}";
-            };
-
-            currentRecorder.OnSaved = (result) =>
-            {
-                // Record中にQuitするとTextがDestroy済なのにアクセスしてしまうのを防止
-                if (!Application.isPlaying) return;
-                
-                
-                string size;
-                    
-                if (result.Size > 1024)
-                {
-                    size =  Mathf.CeilToInt(result.Size/1024f) + "KB";
-                } else if (result.Size > 1024 * 1024)
-                {
-                    size = Mathf.CeilToInt(result.Size/(1024f*1024f)) + "MB";
-                }
-                else
-                {
-                    size = result.Size + "Bytes";
-                }
-                    
-                Logger.Log($"Saved - Packets: {result.PacketNum}, DataSize: {size} : {result.DataPath}");
-            };
-        }
     }
 
 }

@@ -45181,14 +45181,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1789697828}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 690363e9e3ae15843a52e0d3536e7a15, type: 3}
+  m_Script: {fileID: 11500000, guid: fb2eda0256dda064d91f6edb15cda711, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tab: {fileID: 1200623769}
-  timeCodeText: {fileID: 363778559}
-  recordButton: {fileID: 383306112}
+  recorderUI: {fileID: 1834698297}
   currentRecorder: {fileID: 0}
-  indicatorUI: {fileID: 128941263}
 --- !u!1 &1792183967
 GameObject:
   m_ObjectHideFlags: 0
@@ -46626,6 +46623,7 @@ GameObject:
   - component: {fileID: 1834698294}
   - component: {fileID: 1834698296}
   - component: {fileID: 1834698295}
+  - component: {fileID: 1834698297}
   m_Layer: 0
   m_Name: Recorder
   m_TagString: Untagged
@@ -46693,6 +46691,22 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1834698297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1834698293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 690363e9e3ae15843a52e0d3536e7a15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tab: {fileID: 1200623769}
+  timeCodeText: {fileID: 363778559}
+  recordButton: {fileID: 383306112}
+  indicatorUI: {fileID: 128941263}
 --- !u!1 &1840532125
 GameObject:
   m_ObjectHideFlags: 0

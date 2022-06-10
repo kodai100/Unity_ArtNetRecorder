@@ -67,9 +67,6 @@ namespace ProjectBlue.ArtNetRecorder
 
         private void OnDisable()
         {
-
-            Debug.Log("OnDisable");
-            
             loopFlg = false;
             IsRecording = false;
         }
@@ -150,7 +147,7 @@ namespace ProjectBlue.ArtNetRecorder
         {
             var ip = new IPEndPoint(IPAddress.Any, Const.ArtNetServerPort);
             
-            Debug.Log("Run");
+            
             
             await Task.Run(() =>
             {
@@ -158,6 +155,8 @@ namespace ProjectBlue.ArtNetRecorder
                 try
                 {
                     using var udpClient = new UdpClient(ip);
+                    
+                    Debug.Log("UDP Client Established.");
 
                     while (loopFlg)
                     {
@@ -190,13 +189,13 @@ namespace ProjectBlue.ArtNetRecorder
                         {
                             if (e.InnerException is TaskCanceledException)
                             {
-                                Debug.Log("Task canceled");
+                                Debug.Log("UDP Receive Task canceled");
                             }
 
                             break;
                         }
                         case TaskCanceledException _:
-                            Debug.Log("Task canceled");
+                            Debug.Log("UDP Receive Task canceled");
                             break;
                         case SocketException _:
                             Logger.Error("ポート6454が他のアプリケーションによって専有されています");
