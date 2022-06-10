@@ -22,6 +22,8 @@ namespace ProjectBlue.ArtNetRecorder
 
         [SerializeField] private RecorderBase currentRecorder;
 
+        [SerializeField] private IndicatorUI indicatorUI;
+
         private void Start()
         {
 
@@ -48,12 +50,16 @@ namespace ProjectBlue.ArtNetRecorder
                 recorder.name = "UDP Recorder";
                 recordingStatusText.text = "Changed to UDP Recorder";
             }
-            else
+            else if(index == 1)
             {
-                currentRecorder = recorder.AddComponent<DmxRecorder>();
+                currentRecorder = recorder.AddComponent<ArtNetRecorder>();
                 recorder.name = "DMX Recorder";
                 recordingStatusText.text = "Changed to ArtNet Recorder";
             }
+            
+            
+            
+            
             
             recordButton.Button.OnClickAsObservable().Subscribe(_ =>
             {
@@ -78,6 +84,16 @@ namespace ProjectBlue.ArtNetRecorder
                 }
                 
             }).AddTo(currentRecorder);
+            
+            
+            indicatorUI.ResetIndicator();
+
+            currentRecorder.OnIndicatorUpdate = tuple =>
+            {
+                indicatorUI.SetScale(tuple.Item2);
+                indicatorUI.Set(tuple.Item1, tuple.Item3);
+            };
+            
             
             currentRecorder.OnUpdateTime = (ms) =>
             {

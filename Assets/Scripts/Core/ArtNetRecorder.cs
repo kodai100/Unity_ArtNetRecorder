@@ -7,6 +7,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -21,14 +23,17 @@ namespace ProjectBlue.ArtNetRecorder
         public byte[][] Data;
     }
     
-    public class DmxRecorder : RecorderBase
+    public class ArtNetRecorder : RecorderBase
     {
 
         static volatile bool loopFlg = true;
 
         private static byte[][] dmx = new byte[Const.MaxUniverse][];
+        private static byte[] dmxRaw = new byte[Const.MaxUniverse * 512];
         
         private ConcurrentQueue<DmxRecordingPacket> dmxBuff = new ConcurrentQueue<DmxRecordingPacket>();
+        
+        private ConcurrentQueue<(int, int, int)> indicatorBuff = new ConcurrentQueue<(int, int, int)>();
 
         private const double FixedDeltaTime = 1.0d / 60.0d;
         
@@ -38,9 +43,10 @@ namespace ProjectBlue.ArtNetRecorder
         private void OnEnable()
         {
             dmx = new byte[Const.MaxUniverse][];
+            dmxRaw = new byte[Const.MaxUniverse * 512];
 
             loopFlg = true;
-            ReceiveDmxTaskRun();
+            ReceiveDmxTaskRun(this.GetCancellationTokenOnDestroy());
         }
 
         private void Update()
@@ -49,6 +55,12 @@ namespace ProjectBlue.ArtNetRecorder
             if (IsRecording)
             {
                 OnUpdateTime?.Invoke(recordingStopWatch.ElapsedMilliseconds);
+
+                if (indicatorBuff.TryDequeue(out var indicatorData))
+                {
+                    OnIndicatorUpdate?.Invoke(indicatorData);
+                }
+
             }
         }
 
@@ -65,6 +77,8 @@ namespace ProjectBlue.ArtNetRecorder
             if (dmxBuff.Count == 0)
             {
                 dmxBuff = new ConcurrentQueue<DmxRecordingPacket>();
+                indicatorBuff = new ConcurrentQueue<(int, int, int)>();
+                
                 IsRecording = true;
 
                 recordingStopWatch.Start();
@@ -91,6 +105,8 @@ namespace ProjectBlue.ArtNetRecorder
 
                                 uint numUniverses = 0;
                                 var dataSegment = new List<byte[]>();
+
+                                var totalValueAggregation = 0;    // インジケータ用
                                 
                                 // all universes
                                 for (short i = 0; i < dmxRecordingPacket.Data.Length; i++)
@@ -101,12 +117,17 @@ namespace ProjectBlue.ArtNetRecorder
                                         var myUniverse = ByteConvertUtility.GetBytes((uint)i);
                                         numUniverses++;
                                         dataSegment.Add(ByteConvertUtility.Join(myUniverse, dmxRecordingPacket.Data[i]));
+
+                                        totalValueAggregation += dmxRecordingPacket.Data[i].Select(v => (int)v).Sum();
                                     }
                                 }
                                 
+                                // TODO: 多分BinaryWriter継承したクラス作ってRecデータ構造定義してあげたほうがよさそう
                                 var bytes = ByteConvertUtility.Join(sequence, milliseconds, ByteConvertUtility.GetBytes(numUniverses), dataSegment.SelectMany(a => a).ToArray());
                                 file.Write(bytes, 0, bytes.Length);
                                 bytesLen += bytes.Length;
+                                
+                                indicatorBuff.Enqueue(((int)dmxRecordingPacket.Sequence, (int)numUniverses, totalValueAggregation));
                                 
                                 total++;
                             }
@@ -150,7 +171,8 @@ namespace ProjectBlue.ArtNetRecorder
             recordingStopWatch.Reset();
         }
         
-        private unsafe void ReceiveDmxTaskRun()
+        // cannot use async keyword with unsafe context
+        private unsafe void ReceiveDmxTaskRun(CancellationToken cancellationToken = default)
         {
             var ip = new IPEndPoint(IPAddress.Any, Const.ArtNetServerPort);
             
@@ -166,6 +188,7 @@ namespace ProjectBlue.ArtNetRecorder
                         
                         try
                         {
+                            
                             
                             // DMXのレコードのために一時バッファに格納するプロセス
                             if (IsRecording)
@@ -202,7 +225,8 @@ namespace ProjectBlue.ArtNetRecorder
                             
                             
                             // DMXの受信プロセス
-                            var result = udpClient.ReceiveAsync();
+                            var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
+                            
                             if (result.Result.Buffer.Length > 0)
                             {
                                 var buffer = result.Result.Buffer;
@@ -213,10 +237,34 @@ namespace ProjectBlue.ArtNetRecorder
                                     ArtNetPacketUtillity.GetDmx(buffer, ref dmx[universe]);
                                 }
                             }
+                            
+                            
+                            
+                            
+                            
                         }
                         catch (Exception e)
                         {
-                            Debug.LogException(e);
+                            switch (e)
+                            {
+                                case AggregateException _:
+                                {
+                                    if (e.InnerException is TaskCanceledException)
+                                    {
+                                        Debug.Log("Task canceled");
+                                    }
+
+                                    break;
+                                }
+                                case TaskCanceledException _:
+                                    Debug.Log("Task canceled");
+                                    break;
+                                default:
+                                    Debug.LogException(e);
+                                    break;
+                            }
+
+                            loopFlg = false;
                         }
 
                     }
@@ -225,7 +273,7 @@ namespace ProjectBlue.ArtNetRecorder
                     
                     fixedFramerateStopwatch.Stop();
                 }
-            });
+            }, cancellationToken);
         }
     }
 }
