@@ -37,7 +37,7 @@ namespace ProjectBlue.ArtNetRecorder
         public abstract void RecordEnd();
     }
     
-    public class UdpRecorder : RecorderBase
+    public sealed class UdpRecorder : RecorderBase
     {
 
         static volatile bool loopFlg = true;
@@ -53,7 +53,17 @@ namespace ProjectBlue.ArtNetRecorder
         {
             loopFlg = true;
             context = SynchronizationContext.Current;
-            ReceiveUdpTaskRun(this.GetCancellationTokenOnDestroy()).Forget();
+
+            try
+            {
+                ReceiveUdpTaskRun(this.GetCancellationTokenOnDestroy()).Forget();
+            }
+            catch (Exception e)
+            {
+                Debug.Log("AA");
+            }
+
+            
         }
 
         private void Update()
@@ -146,70 +156,76 @@ namespace ProjectBlue.ArtNetRecorder
         private async UniTaskVoid ReceiveUdpTaskRun(CancellationToken cancellationToken = default)
         {
             var ip = new IPEndPoint(IPAddress.Any, Const.ArtNetServerPort);
-            
-            
-            
-            await Task.Run(() =>
+
+            try
             {
-
-                try
+                await Task.Run(() =>
                 {
-                    using var udpClient = new UdpClient(ip);
-                    
-                    Debug.Log("UDP Client Established.");
 
-                    while (loopFlg)
+                    try
                     {
+                        using var udpClient = new UdpClient(ip);
+                        
+                        Debug.Log("UDP Client Established.");
 
-                        // DMXの受信プロセス
-                        var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
-
-                        if (result.Result.Buffer.Length > 0)
+                        while (loopFlg)
                         {
-                            var buffer = result.Result.Buffer;
 
-                            if (IsRecording)
+                            // DMXの受信プロセス
+                            var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
+
+                            if (result.Result.Buffer.Length > 0)
                             {
-                                udpBuff.Enqueue(new UdpRecordingPacket()
+                                var buffer = result.Result.Buffer;
+
+                                if (IsRecording)
                                 {
-                                    Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds,
-                                    Data = buffer
-                                });
-                                recordingSequenceNumber++;
+                                    udpBuff.Enqueue(new UdpRecordingPacket()
+                                    {
+                                        Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds,
+                                        Data = buffer
+                                    });
+                                    recordingSequenceNumber++;
+                                }
                             }
                         }
-                    }
 
-                }
-                catch (Exception e)
-                {
-                    switch (e)
+                    }
+                    catch (Exception e)
                     {
-                        case AggregateException _:
+                        
+                        loopFlg = false;
+                        
+                        switch (e)
                         {
-                            if (e.InnerException is TaskCanceledException)
+                            case AggregateException _:
                             {
-                                Debug.Log("UDP Receive Task canceled");
-                            }
+                                if (e.InnerException is TaskCanceledException)
+                                {
+                                    Debug.Log("UDP Receive Task canceled");
+                                }
 
-                            break;
+                                break;
+                            }
+                            case TaskCanceledException _:
+                                Debug.Log("UDP Receive Task canceled");
+                                break;
+                            case SocketException _:
+                                throw;
+                            default:
+                                Debug.LogException(e);
+                                break;
                         }
-                        case TaskCanceledException _:
-                            Debug.Log("UDP Receive Task canceled");
-                            break;
-                        case SocketException _:
-                            Logger.Error("ポート6454が他のアプリケーションによって専有されています");
-                            break;
-                        default:
-                            Debug.LogException(e);
-                            break;
+                        
                     }
 
-                    loopFlg = false;
-                }
-
-            }, cancellationToken);
-
+                }, cancellationToken);
+            }
+            catch (SocketException e)
+            {
+                Logger.Error("ポート6454が他のアプリケーションによって専有されています");
+                var result = await DialogManager.OpenError("ポート6454が他のアプリケーションによって\n専有されています");
+            }
             
             Debug.Log("UDP Server finished");
             

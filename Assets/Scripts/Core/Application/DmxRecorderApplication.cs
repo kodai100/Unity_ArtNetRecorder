@@ -37,13 +37,13 @@ public class DmxRecorderApplication : ApplicationBase
     {
         var recorder = new GameObject();
 
-        if (index == 0)
+        if (index == 1)
         {
             currentRecorder = recorder.AddComponent<UdpRecorder>();
             recorder.name = "UDP Recorder";
             Logger.Log("Changed to UDP Recorder");
         }
-        else if (index == 1)
+        else if (index == 0)
         {
             currentRecorder = recorder.AddComponent<ArtNetRecorder>();
             recorder.name = "DMX Recorder";

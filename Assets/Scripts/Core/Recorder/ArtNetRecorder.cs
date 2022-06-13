@@ -23,7 +23,7 @@ namespace ProjectBlue.ArtNetRecorder
         public byte[][] Data;
     }
     
-    public class ArtNetRecorder : RecorderBase
+    public sealed class ArtNetRecorder : RecorderBase
     {
 
         static volatile bool loopFlg = true;
@@ -40,12 +40,20 @@ namespace ProjectBlue.ArtNetRecorder
         private Stopwatch recordingStopWatch = new Stopwatch();
         private uint recordingSequenceNumber = 0;
 
+        private SynchronizationContext synchronizationContext;
+
+        private void Awake()
+        {
+            synchronizationContext = SynchronizationContext.Current;
+        }
+        
         private void OnEnable()
         {
             dmx = new byte[Const.MaxUniverse][];
             dmxRaw = new byte[Const.MaxUniverse * 512];
 
             loopFlg = true;
+
             ReceiveDmxTaskRun(this.GetCancellationTokenOnDestroy());
         }
 
@@ -175,34 +183,35 @@ namespace ProjectBlue.ArtNetRecorder
         private unsafe void ReceiveDmxTaskRun(CancellationToken cancellationToken = default)
         {
             var ip = new IPEndPoint(IPAddress.Any, Const.ArtNetServerPort);
-            
-            Task.Run(() =>
+
+            // unsafe関数内なのでawaitできない
+            var task = Task.Run(() =>
             {
 
                 try
                 {
                     using var udpClient = new UdpClient(ip);
-                    
+
                     Debug.Log("ArtNet Client Established");
-                    
+
                     var fixedFramerateStopwatch = new Stopwatch();
                     var dt = 0.0d;
 
                     while (loopFlg)
                     {
-                                
+
                         // DMXのレコードのために一時バッファに格納するプロセス
                         if (IsRecording)
                         {
                             fixedFramerateStopwatch.Stop();
                             if (dt <= fixedFramerateStopwatch.Elapsed.TotalSeconds)
                             {
-                                    
+
                                 fixedFramerateStopwatch.Start();
                                 dt += FixedDeltaTime;
-                                    
+
                                 // Create packet
-                                    
+
                                 var buff = new byte[Const.MaxUniverse][];
                                 for (var i = 0; i < Const.MaxUniverse; i++)
                                 {
@@ -215,7 +224,12 @@ namespace ProjectBlue.ArtNetRecorder
                                         }
                                     }
                                 }
-                                dmxBuff.Enqueue(new DmxRecordingPacket{Sequence = recordingSequenceNumber, Time = recordingStopWatch.ElapsedMilliseconds, Data = buff});
+
+                                dmxBuff.Enqueue(new DmxRecordingPacket
+                                {
+                                    Sequence = recordingSequenceNumber,
+                                    Time = recordingStopWatch.ElapsedMilliseconds, Data = buff
+                                });
                                 recordingSequenceNumber++;
                             }
                             else
@@ -223,8 +237,8 @@ namespace ProjectBlue.ArtNetRecorder
                                 fixedFramerateStopwatch.Start();
                             }
                         }
-                            
-                            
+
+
                         // DMXの受信プロセス
                         var result = udpClient.ReceiveAsync().WithCancellation(cancellationToken);
 
@@ -245,6 +259,8 @@ namespace ProjectBlue.ArtNetRecorder
                 }
                 catch (Exception e)
                 {
+                    loopFlg = false;
+
                     switch (e)
                     {
                         case AggregateException _:
@@ -260,19 +276,34 @@ namespace ProjectBlue.ArtNetRecorder
                             Debug.Log("ArtNet Receive Task canceled");
                             break;
                         case SocketException _:
-                            Logger.Error("ポート6454が他のアプリケーションによって専有されています");
-                            break;
+                            throw;
                         default:
                             Debug.LogException(e);
                             break;
                     }
 
-                    loopFlg = false;
+                    
+                    Debug.Log("ArtNet Server finished");
                 }
-                
-                Debug.Log("ArtNet Server finished");
-               
+
             }, cancellationToken);
+            
+            // awaitできないので仕方なくContinueWithでエラーハンドリングする
+            task.ContinueWith(continuationAction =>
+            {
+                if (continuationAction.Exception is AggregateException agg)
+                {
+                    if (agg.InnerException is SocketException)
+                    {
+                        synchronizationContext.Post(__ =>
+                        {
+                            Logger.Error("ポート6454が他のアプリケーションによって専有されています");
+                            DialogManager.OpenError("ポート6454が他のアプリケーションによって\n専有されています").Forget();
+                        }, null);
+                    }
+                }
+            }, cancellationToken);
+            
         }
     }
 }
