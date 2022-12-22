@@ -69,7 +69,9 @@ public class ArtNetPlayer : MonoBehaviour
                             Universe = (short) universeData.universe, DmxData = dmx[universeData.universe]
                         };
 
-                        udpClient.Send(artNetPacket.ToArray(), artNetPacket.Length, artNetResendUI.IPAddress.ToString(), artNetResendUI.Port);
+                        var artNetPacketBytes = artNetPacket.ToArray();
+
+                        udpClient.Send(artNetPacketBytes, artNetPacketBytes.Length, artNetResendUI.IPAddress.ToString(), artNetResendUI.Port);
                     }
                     
                     // universe
